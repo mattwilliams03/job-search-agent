@@ -8,9 +8,6 @@ Usage:
     pytest tests/test_tools.py
     or
     uv run pytest tests/test_tools.py
-
-Author: Claude Builder Club @ UC Irvine
-Workshop: Intro to AI Agents (October 20, 2025)
 """
 
 import pytest
@@ -133,7 +130,7 @@ def test_format_job_listing_missing_salary():
 
 def test_search_jobs_invalid_num_results():
     """Test that an out-of-range num_results is caught."""
-    result = search_jobs.func(role="Data Scientist", location="Los Angeles", num_results=0)
+    result = search_jobs(role="Data Scientist", location="Los Angeles", num_results=0)
     assert "ERROR" in result
     assert "num_results" in result.lower()
 
@@ -142,7 +139,7 @@ def test_search_jobs_invalid_num_results():
 @patch('src.tools.ADZUNA_API_KEY', None)
 def test_search_jobs_missing_credentials():
     """Test that missing API credentials are detected."""
-    result = search_jobs.func(role="Data Scientist", location="Los Angeles", num_results=5)
+    result = search_jobs(role="Data Scientist", location="Los Angeles", num_results=5)
     assert "ERROR" in result
     assert "credentials" in result.lower()
 
@@ -177,7 +174,7 @@ def test_search_jobs_success(mock_api_request):
         ]
     }
 
-    result = search_jobs.func(role="Data Scientist", location="Los Angeles", num_results=2)
+    result = search_jobs(role="Data Scientist", location="Los Angeles", num_results=2)
 
     # Check success indicators
     assert "ERROR" not in result
@@ -198,7 +195,7 @@ def test_search_jobs_no_results(mock_api_request):
         "results": []
     }
 
-    result = search_jobs.func(
+    result = search_jobs(
         role="Extremely Rare Job Title",
         location="Middle of Nowhere",
         num_results=5
@@ -216,7 +213,7 @@ def test_search_jobs_api_failure(mock_api_request):
     # Mock API failure
     mock_api_request.return_value = None
 
-    result = search_jobs.func(role="Data Scientist", location="Los Angeles", num_results=5)
+    result = search_jobs(role="Data Scientist", location="Los Angeles", num_results=5)
 
     assert "ERROR" in result
     assert "Failed to fetch" in result
@@ -240,7 +237,7 @@ def test_search_jobs_integration():
     2. Change skipif to False above
     3. Run: pytest tests/test_tools.py -m integration
     """
-    result = search_jobs.func(role="Data Scientist", location="Los Angeles", num_results=2)
+    result = search_jobs(role="Data Scientist", location="Los Angeles", num_results=2)
 
     # Should get real results
     assert "ERROR" not in result

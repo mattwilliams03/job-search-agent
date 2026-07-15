@@ -1,11 +1,14 @@
 # Job Search AI Agent System - Dependencies
 # Python 3.10+ required
 
-# CrewAI Framework - Multi-agent orchestration
-# CrewAI's LLM wrapper talks to Claude via litellm, so no separate
-# anthropic/langchain packages are needed.
-crewai==1.15.2
-crewai-tools==1.15.2
+# Anthropic Claude SDK - Direct LLM access
+anthropic==0.116.0
+
+# CLI framework
+typer==0.26.8
+
+# Document conversion (used by profile ingestion, Phase 1+)
+markitdown
 
 # HTTP Requests - For Adzuna API calls
 requests==2.34.2

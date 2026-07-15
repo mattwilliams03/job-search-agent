@@ -67,3 +67,8 @@ uv.lock
 
 # Ruff
 .ruff_cache/
+
+# SQLite database (generated, not checked in)
+data/*.db
+data/*.db-wal
+data/*.db-shm

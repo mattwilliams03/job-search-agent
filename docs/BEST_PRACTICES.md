@@ -1,10 +1,10 @@
 # Best Practices Applied in This Project
 
-This document summarizes the best practices from Anthropic, CrewAI, and software engineering that were applied in building this multi-agent job search system.
+This document summarizes the best practices from Anthropic and software engineering that were applied in building this job search system.
 
 ## Table of Contents
 - [Anthropic Claude Best Practices](#anthropic-claude-best-practices)
-- [CrewAI Multi-Agent Design Patterns](#crewai-multi-agent-design-patterns)
+- [Sequential Pipeline Design Patterns](#sequential-pipeline-design-patterns)
 - [Software Engineering Best Practices](#software-engineering-best-practices)
 - [How We Applied These Practices](#how-we-applied-these-practices)
 
@@ -147,55 +147,54 @@ backstory=(
 
 ---
 
-## CrewAI Multi-Agent Design Patterns
+## Sequential Pipeline Design Patterns
 
-### 1. Role-Based Agent Architecture
+### 1. Role-Based Step Architecture
 
-**Principle:** Design agents with specialized roles that naturally decompose complex tasks.
+**Principle:** Design each step with a specialized role that naturally decomposes complex tasks.
 
 **Applied in our code:**
-- 4 specialized agents, each with distinct expertise
+- 4 specialized steps, each with distinct expertise, defined in `src/prompts/`
 - Clear separation of concerns (search vs analyze vs advise)
 - Natural workflow: search → analyze skills → prep interviews → career advice
 
 **Benefits:**
 - Easier to maintain and debug
-- Each agent can be improved independently
+- Each step can be improved independently
 - Clear delegation of responsibilities
 
-### 2. Task Chaining Through Context
+### 2. Step Chaining Through Context
 
-**Principle:** Agents collaborate by passing context from previous tasks.
+**Principle:** Steps collaborate by passing context from previous steps.
 
 **Applied in our code:**
 ```python
-# tasks.py - Context parameter links tasks
-skills_task = Task(
-    description="Analyze job listings...",
-    context=[job_search_task],  # Builds on job search results
-    agent=skills_advisor
+# src/core/legacy_run.py - job search output passed into later prompts
+output = llm.complete(
+    task="legacy_skills_analysis",
+    system=legacy_skills_analysis.SYSTEM,
+    user=legacy_skills_analysis.build_user_prompt(role, job_search_output),
 )
 ```
 
 **Benefits:**
-- Agents build on each other's work
+- Steps build on each other's work
 - No need to repeat information
 - Sequential refinement of analysis
 
 ### 3. Tool Pattern
 
-**Principle:** Agents use tools to interact with external systems and APIs.
+**Principle:** Use tools to interact with external systems and APIs, called directly by code rather than left to model discretion when the call parameters are already known.
 
 **Applied in our code:**
 - `search_jobs` tool wraps Adzuna API
-- Clean separation: agent (decision maker) vs tool (executor)
+- Clean separation: `src/tools.py` (executor) vs `src/core/legacy_run.py` (caller)
 - Reusable tool with clear input/output contract
 
 **Example from our code:**
 ```python
-# tools.py - CrewAI tool decorator
-@tool("Job Search Tool")
-def search_jobs(input_json: str) -> str:
+# tools.py - plain function, called directly by legacy_run.py
+def search_jobs(role: str, location: str, num_results: int) -> str:
     """
     Search for job listings using Adzuna API.
     Clear documentation of input schema and return format.
@@ -204,26 +203,26 @@ def search_jobs(input_json: str) -> str:
 
 ### 4. Verbose Mode for Learning
 
-**Principle:** Enable detailed output to understand agent thinking process.
+**Principle:** Enable detailed output to understand each step's progress.
 
 **Applied in our code:**
-- `AGENT_VERBOSE = True` in config
-- Students can see each agent's reasoning
+- `--verbose` CLI flag (see `main.py`, `src/cli.py`)
+- Students can see each step's saved output
 - Great for debugging and learning
 
 ### 5. Sequential Process for Complex Workflows
 
-**Principle:** For tasks with dependencies, use sequential processing where each agent completes their task before the next begins.
+**Principle:** For tasks with dependencies, use sequential processing where each step completes before the next begins.
 
 **Applied in our code:**
 ```python
-# main.py - Sequential crew execution
-crew = Crew(
-    agents=list(agents_dict.values()),
-    tasks=tasks,
-    process=Process.sequential,  # One agent at a time
-    verbose=True
-)
+# src/core/legacy_run.py - sequential step execution
+for step_name, prompt_module in (
+    ("skills_analysis", legacy_skills_analysis),
+    ("interview_prep", legacy_interview_prep),
+    ("career_advisory", legacy_career_advisory),
+):
+    output = llm.complete(task=f"legacy_{step_name}", ...)  # One step at a time
 ```
 
 ---
@@ -270,23 +269,18 @@ def _make_api_request_with_retry(url, max_retries=3):
 
 **Example:**
 ```python
-def create_job_search_task(
-    agent: Agent,
-    role: str,
-    location: str,
-    num_results: int
-) -> Task:
+def build_user_prompt(role: str, location: str, num_results: int, search_results: str) -> str:
     """
-    Create the job search task.
+    Assemble the user-turn prompt for the Job Search step.
 
     Args:
-        agent: The Job Searcher agent
-        role: Job role to search for
-        location: Location to search in
-        num_results: Number of results to retrieve
+        role: Job role searched for.
+        location: Location searched in.
+        num_results: Number of results requested.
+        search_results: Raw output of src.tools.search_jobs().
 
     Returns:
-        Task configured for job searching
+        The full user-turn prompt string.
     """
 ```
 
@@ -298,9 +292,12 @@ def create_job_search_task(
 ```
 src/
 ├── config.py      # Configuration and settings
+├── llm.py         # Thin Anthropic SDK wrapper
 ├── tools.py       # External tool integrations
-├── agents.py      # Agent definitions
-├── tasks.py       # Task definitions
+├── prompts/       # Per-step system/user prompt content
+├── core/          # Service functions (e.g. legacy_run.py)
+├── db/            # SQLite connection, migrations, repos
+├── cli.py         # typer CLI (`jobsearch` command)
 └── __init__.py    # Module exports
 ```
 
@@ -327,21 +324,21 @@ src/
 
 ## How We Applied These Practices
 
-### In Agent Design (agents.py)
+### In Prompt Design (src/prompts/)
 
-✅ **Clear roles** - Each agent has a specific expertise area
+✅ **Clear roles** - Each step has a specific expertise area (SYSTEM prompt)
 ✅ **Rich backstories** - Detailed persona with experience and approach
 ✅ **Explicit goals** - Measurable objectives with context variables
 ✅ **Examples in prompts** - Interview Coach shows question format
-✅ **Verbose mode** - Students can see agent thinking
+✅ **Verbose mode** - Students can see each step's saved output
 
-### In Task Design (tasks.py)
+### In Step Design (src/core/legacy_run.py)
 
-✅ **Step-by-step instructions** - Skills task uses explicit steps
+✅ **Step-by-step instructions** - Skills step uses explicit steps
 ✅ **XML-structured prompts** - Clear sections with tags
-✅ **Context chaining** - Tasks build on previous results
+✅ **Context chaining** - Later steps build on the job search step's results
 ✅ **Expected output defined** - Clear format specifications
-✅ **Callbacks for persistence** - Save intermediate results
+✅ **Per-step file output** - Save intermediate results
 
 ### In Tool Design (tools.py)
 
@@ -388,11 +385,6 @@ src/
 - Prompt Engineering Guide: https://docs.anthropic.com/prompt-engineering
 - Claude API Documentation: https://docs.anthropic.com/claude/reference
 
-**CrewAI Documentation:**
-- Official Docs: https://docs.crewai.com
-- Agent Best Practices: https://docs.crewai.com/guides/agents
-- Multi-Agent Course: https://www.deeplearning.ai/short-courses/multi-ai-agent-systems-with-crewai/
-
 **General Resources:**
 - Adzuna API Docs: https://developer.adzuna.com/
 - Python Type Hints: https://docs.python.org/3/library/typing.html
@@ -416,8 +408,3 @@ Building great AI agents is an iterative process. Don't be afraid to experiment!
 **Questions?** Come to office hours or post in the Discord!
 
 **Want to contribute?** Submit a PR with your improvements!
-
----
-
-Generated for UC Irvine Claude Builder Club
-Intro to AI Agents Workshop | October 20, 2025

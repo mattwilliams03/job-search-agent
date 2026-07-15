@@ -1,16 +1,11 @@
 """
 Custom tools for the Job Search AI Agent System.
 
-This module contains the JobSearchTool that integrates with the Adzuna API
-to fetch real-time job listings. Tools in CrewAI are functions that agents
-can use to interact with external systems.
-
-Author: Claude Builder Club @ UC Irvine
-Workshop: Intro to AI Agents (October 20, 2025)
+This module contains the search_jobs tool that integrates with the
+Adzuna API to fetch real-time job listings.
 
 Best Practices Applied:
 - Anthropic: Clear error handling with structured responses
-- CrewAI: Tool pattern with explicit input/output schemas
 - Python: Type hints and comprehensive docstrings
 """
 
@@ -18,7 +13,6 @@ import json
 import time
 import requests
 from typing import Any, Dict, List, Optional
-from crewai.tools import tool
 
 from src.config import (
     ADZUNA_APP_ID,
@@ -194,19 +188,17 @@ def _validate_search_input(input_data: Dict[str, Any]) -> tuple[bool, str]:
 
 
 # =============================================================================
-# CREWAI TOOL: JOB SEARCH
+# JOB SEARCH TOOL
 # =============================================================================
 
-@tool("Job Search Tool")
 def search_jobs(role: str, location: str, num_results: int) -> str:
     """
     Search for job listings using the Adzuna API.
 
-    This tool is designed to be used by AI agents in the CrewAI framework.
-    It accepts job search parameters and returns formatted job listings.
+    Accepts job search parameters and returns formatted job listings.
 
     Following best practices:
-    - CrewAI Tool Pattern: Clear input/output schema with direct parameters
+    - Clear input/output schema with direct parameters
     - Anthropic: Structured prompts with XML tags for better parsing
     - Python: Robust error handling and type safety
 

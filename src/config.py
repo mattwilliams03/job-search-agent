@@ -4,9 +4,6 @@ Configuration settings for the Job Search AI Agent System.
 This file contains all configurable constants and settings that control
 how the multi-agent system operates. Students can easily modify these
 values to customize their job search.
-
-Author: Claude Builder Club @ UC Irvine
-Workshop: Intro to AI Agents (October 20, 2025)
 """
 
 import os
@@ -22,7 +19,7 @@ load_dotenv()
 
 # Anthropic Claude API Configuration
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
-CLAUDE_MODEL = "anthropic/claude-sonnet-5"
+CLAUDE_MODEL = "claude-sonnet-5"
 
 # Adzuna Job Search API Configuration
 ADZUNA_APP_ID = os.getenv("ADZUNA_APP_ID")
@@ -41,20 +38,20 @@ DEFAULT_LOCATION = "Los Angeles"
 DEFAULT_NUM_RESULTS = 5  # Number of job listings to retrieve
 
 # =============================================================================
-# AGENT CONFIGURATION
+# MODEL ASSIGNMENT
 # =============================================================================
 
-# Agent verbosity is controlled at runtime via the --verbose CLI flag
-# (see main.py), not here, so quiet/detailed output can be chosen per run.
-
-# Agent delegation - Allow agents to delegate tasks to each other
-AGENT_ALLOW_DELEGATION = False  # Disabled to reduce API calls and avoid rate limits
-
-# Memory settings - Agents can remember context from previous interactions
-# Disabled: CrewAI's memory tools require a vector embedder (OpenAI by
-# default), and this project only uses Anthropic/Adzuna keys. Task context
-# is already passed explicitly via each Task's `context` parameter.
-AGENT_MEMORY = False
+# Per-task model lookup, keyed by the `task` argument passed to
+# src.llm.complete(). All legacy steps share one model for now; later
+# phases add real per-task keys/models here (e.g. MODEL_EXTRACT for
+# cheap extraction tasks, MODEL_COVER_LETTER for higher-effort drafting)
+# without touching src/llm.py itself.
+MODEL_FOR_TASK: dict[str, str] = {
+    "legacy_job_search": CLAUDE_MODEL,
+    "legacy_skills_analysis": CLAUDE_MODEL,
+    "legacy_interview_prep": CLAUDE_MODEL,
+    "legacy_career_advisory": CLAUDE_MODEL,
+}
 
 # =============================================================================
 # OUTPUT CONFIGURATION
@@ -83,15 +80,6 @@ API_MAX_RETRIES = 3
 
 # Delay between retries (seconds)
 API_RETRY_DELAY = 2
-
-# =============================================================================
-# CREWAI PROCESS CONFIGURATION
-# =============================================================================
-
-# Process type: "sequential" or "hierarchical"
-# Sequential: Agents work one after another in order
-# Hierarchical: A manager agent coordinates worker agents
-CREW_PROCESS = "sequential"
 
 # =============================================================================
 # VALIDATION FUNCTIONS
@@ -130,8 +118,8 @@ def validate_config() -> tuple[bool, list[str]]:
         errors.append("DEFAULT_NUM_RESULTS must be between 1 and 50.")
 
     # Validate model name
-    if not CLAUDE_MODEL or not CLAUDE_MODEL.startswith("anthropic/"):
-        errors.append("CLAUDE_MODEL must be a valid Claude model name with 'anthropic/' prefix.")
+    if not CLAUDE_MODEL:
+        errors.append("CLAUDE_MODEL must be set to a valid Claude model name.")
 
     is_valid = len(errors) == 0
     return is_valid, errors
@@ -152,7 +140,6 @@ def print_config() -> None:
     print(f"   Number of Results: {DEFAULT_NUM_RESULTS}")
     print(f"\n🤖 Agent Settings:")
     print(f"   Model: {CLAUDE_MODEL}")
-    print(f"   Allow Delegation: {AGENT_ALLOW_DELEGATION}")
     print(f"\n🔑 API Keys:")
     print(f"   Anthropic API: {'✓ Set' if ANTHROPIC_API_KEY else '✗ Missing'}")
     print(f"   Adzuna App ID: {'✓ Set' if ADZUNA_APP_ID else '✗ Missing'}")
@@ -180,9 +167,8 @@ __all__ = [
     "DEFAULT_LOCATION",
     "DEFAULT_NUM_RESULTS",
 
-    # Agent Settings
-    "AGENT_ALLOW_DELEGATION",
-    "AGENT_MEMORY",
+    # Model Settings
+    "MODEL_FOR_TASK",
 
     # Output Settings
     "OUTPUT_DIR",
@@ -194,9 +180,6 @@ __all__ = [
     "API_TIMEOUT",
     "API_MAX_RETRIES",
     "API_RETRY_DELAY",
-
-    # CrewAI Settings
-    "CREW_PROCESS",
 
     # Functions
     "validate_config",

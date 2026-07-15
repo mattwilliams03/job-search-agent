@@ -1,8 +1,6 @@
 # 🤖 Job Search AI Agent System
 
-> **Multi-agent job search automation using CrewAI + Claude**
->
-> Built for UC Irvine Claude Builder Club's "Intro to AI Agents" workshop (October 20, 2025)
+> **Multi-step job search automation powered by Claude**
 
 Stop manually searching for jobs, analyzing requirements, and preparing for interviews. Let AI agents do the heavy lifting while you focus on landing your dream role.
 
@@ -335,40 +333,34 @@ For more issues, see [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
 ```
 ┌─────────────┐
-│   main.py   │  Entry point, orchestrates everything
+│   main.py   │  Entry point, delegates to src/core/legacy_run.py
 └──────┬──────┘
        │
-       ├─> Creates Agents (from agents.py)
-       │   ├── Job Searcher (uses Adzuna API tool)
-       │   ├── Skills Advisor (analyzes jobs)
-       │   ├── Interview Coach (generates questions)
-       │   └── Career Advisor (strategic advice)
-       │
-       ├─> Creates Tasks (from tasks.py)
-       │   ├── Job Search Task → Skills Task
-       │   ├── Skills Task   → Interview Task
-       │   └── Interview Task → Career Task
-       │
-       └─> Creates Crew (CrewAI)
-           └─> Sequential execution
-               └─> Each agent completes their task
-                   └─> Results saved & passed to next
+       └─> run_legacy_flow() (src/core/legacy_run.py)
+           ├─> Step 1: Job Search (calls Adzuna API tool directly,
+           │           then Claude summarizes the results)
+           ├─> Step 2: Skills Advisor (analyzes jobs via Claude)
+           ├─> Step 3: Interview Coach (generates questions via Claude)
+           └─> Step 4: Career Advisor (strategic advice via Claude)
+               └─> Sequential execution
+                   └─> Each step's prompt lives in src/prompts/
+                       └─> Results saved & passed to the next step
 ```
 
-### Agent Flow
+### Step Flow
 
-1. **Job Searcher Agent** calls Adzuna API → finds 5 jobs in Los Angeles
-2. **Skills Advisor Agent** receives job listings → analyzes required skills → creates learning roadmap
-3. **Interview Coach Agent** receives job listings → generates 8-10 questions per role → provides STAR method guidance
-4. **Career Advisor Agent** receives job listings → gives resume tips, LinkedIn optimization, networking strategies
+1. **Job Search step** calls Adzuna API → finds 5 jobs in Los Angeles
+2. **Skills Advisor step** receives job listings → analyzes required skills → creates learning roadmap
+3. **Interview Coach step** receives job listings → generates 8-10 questions per role → provides STAR method guidance
+4. **Career Advisor step** receives job listings → gives resume tips, LinkedIn optimization, networking strategies
 
-All agents use **Claude (Anthropic)** as their LLM brain.
+All steps use **Claude (Anthropic)** directly via `src/llm.py`.
 
 ### Key Technologies
 
-- **CrewAI** - Multi-agent orchestration framework
-- **LangChain** - LLM framework integration layer
-- **Anthropic Claude** - Latest Sonnet 4.5 model for reasoning
+- **Anthropic Claude** - Direct SDK access via `src/llm.py`
+- **SQLite** - System of record for the stateful redesign (`src/db/`)
+- **typer** - CLI framework (`jobsearch` command, see `src/cli.py`)
 - **Adzuna API** - Real job search data
 - **Python 3.10+** - Modern Python with type hints
 
@@ -379,14 +371,12 @@ All agents use **Claude (Anthropic)** as their LLM brain.
 ### Understand the Code
 
 1. **Start with:** [docs/BEST_PRACTICES.md](docs/BEST_PRACTICES.md) - Learn the design patterns used
-2. **Read the code:** Start with `main.py`, then `agents.py`, then `tasks.py`
+2. **Read the code:** Start with `main.py`, then `src/core/legacy_run.py`, then `src/prompts/`
 3. **Experiment:** Change one thing, run it, see what happens
 
 ### Learn More About AI Agents
 
-- **CrewAI Docs:** https://docs.crewai.com/
 - **Anthropic Prompt Engineering:** https://docs.anthropic.com/prompt-engineering
-- **DeepLearning.AI Course:** [Multi-Agent Systems with CrewAI](https://www.deeplearning.ai/short-courses/multi-ai-agent-systems-with-crewai/)
 
 ### Learn More About the APIs
 
@@ -429,11 +419,10 @@ MIT License - Feel free to use this for learning, projects, or your actual job s
 
 ## 🙏 Acknowledgments
 
-- **UC Irvine Claude Builder Club** - For organizing the workshop
+This project originated as workshop material for UC Irvine Claude Builder Club's "Intro to AI Agents" session — thanks to them for the original workshop this is built on.
+
 - **Anthropic** - For Claude and excellent documentation
-- **CrewAI** - For making multi-agent systems accessible
 - **Adzuna** - For providing free job search API access
-- **All workshop participants** - For being awesome!
 
 ---
 
@@ -459,12 +448,8 @@ After completing the workshop:
 
 ---
 
-**Built with ❤️ for UC Irvine Claude Builder Club**
-
 *Happy job hunting! May your agents find you the perfect role.* 🎯
 
 ---
 
-**Workshop Date:** October 20, 2025
 **Version:** 1.0.0
-**Last Updated:** October 19, 2025
