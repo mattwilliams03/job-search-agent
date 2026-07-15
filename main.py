@@ -14,11 +14,24 @@ Author: Claude Builder Club @ UC Irvine
 Workshop: Intro to AI Agents (October 20, 2025)
 """
 
+import argparse
+import re
 import sys
+import warnings
 from datetime import datetime
 from pathlib import Path
 
+# This project doesn't use CrewAI's checkpointing feature, so the callback
+# functions on our Tasks not being serializable for that purpose is expected.
+warnings.filterwarnings(
+    "ignore",
+    message="function callbacks cannot be serialized.*",
+    category=UserWarning,
+)
+
 from crewai import Crew, Process
+from crewai.events.utils.console_formatter import set_suppress_console_output
+from crewai.events.listeners.tracing.utils import set_suppress_tracing_messages
 
 # Import our custom modules
 from src.config import (
@@ -34,14 +47,28 @@ from src.agents import create_all_agents
 from src.tasks import create_all_tasks
 
 
+def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
+    parser = argparse.ArgumentParser(description="Job Search AI Agent System")
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help=(
+            "Show detailed configuration, agent reasoning, and tool call "
+            "output. By default only a one-line checkmark per task is shown."
+        ),
+    )
+    return parser.parse_args()
+
+
 # =============================================================================
 # JOB SEARCH PARAMETERS - CUSTOMIZE THESE!
 # =============================================================================
 
 # TODO: CUSTOMIZE - Change these values for your own job search!
 # These default to the values in config.py, but you can override them here
-JOB_ROLE = DEFAULT_JOB_ROLE  # e.g., "Software Engineer", "Product Manager"
-LOCATION = DEFAULT_LOCATION  # e.g., "San Francisco", "Remote", "New York"
+JOB_ROLE = "Junior Civil Engineer"  # e.g., "Software Engineer", "Product Manager"
+LOCATION = "New York"  # e.g., "San Francisco", "Remote", "New York"
 NUM_RESULTS = DEFAULT_NUM_RESULTS  # Number of jobs to search for (1-50)
 
 
@@ -49,8 +76,12 @@ NUM_RESULTS = DEFAULT_NUM_RESULTS  # Number of jobs to search for (1-50)
 # HELPER FUNCTIONS
 # =============================================================================
 
-def print_banner():
-    """Print a welcoming banner."""
+def print_banner(verbose: bool = False):
+    """Print a welcoming banner (full ASCII art only in --verbose)."""
+    if not verbose:
+        print("🤖 Job Search AI Agent System\n")
+        return
+
     banner = """
 ╔══════════════════════════════════════════════════════════════════════════╗
 ║                                                                          ║
@@ -78,7 +109,25 @@ def print_search_params(role: str, location: str, num_results: int):
     print("="*80 + "\n")
 
 
-def save_final_report(crew_output, role: str, location: str) -> Path:
+def create_run_output_dir(role: str, timestamp: str) -> Path:
+    """
+    Create a dedicated output folder for this run, named after the job
+    role and timestamp so each run's files are kept together.
+
+    Args:
+        role: Job role being searched (used in the folder name)
+        timestamp: Timestamp string shared by this run's files
+
+    Returns:
+        Path to the created run-specific output directory
+    """
+    safe_role = re.sub(r'[^\w\-]+', '_', role.strip()).strip('_').lower()
+    run_dir = OUTPUT_DIR / f"{safe_role}_{timestamp}"
+    run_dir.mkdir(parents=True, exist_ok=True)
+    return run_dir
+
+
+def save_final_report(crew_output, role: str, location: str, output_dir: Path) -> Path:
     """
     Save the final combined report from all agents in Markdown format.
 
@@ -86,13 +135,14 @@ def save_final_report(crew_output, role: str, location: str) -> Path:
         crew_output: The output from crew.kickoff()
         role: Job role searched
         location: Location searched
+        output_dir: This run's output directory
 
     Returns:
         Path to the saved report file
     """
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"job_search_report_{timestamp}.md"
-    filepath = OUTPUT_DIR / filename
+    filepath = output_dir / filename
 
     with open(filepath, "w", encoding="utf-8") as f:
         # Write Markdown header
@@ -126,21 +176,17 @@ def save_final_report(crew_output, role: str, location: str) -> Path:
     return filepath
 
 
-def print_completion_message(report_path: Path):
+def print_completion_message(report_path: Path, run_dir: Path, verbose: bool = False):
     """Print completion message with report location."""
-    print("\n\n" + "="*80)
-    print("✅ JOB SEARCH ANALYSIS COMPLETE!")
-    print("="*80)
-    print(f"\n📄 Full report saved to: {report_path}")
-    print(f"\n📂 All intermediate outputs saved in: {OUTPUT_DIR}")
-    print("\n" + "="*80)
-    print("\n🎉 Next Steps:")
-    print("  1. Review the full report for comprehensive job search guidance")
-    print("  2. Check individual agent outputs in the outputs/ folder")
-    print("  3. Customize the search parameters in main.py to find more jobs")
-    print("  4. Use the insights to update your resume and LinkedIn profile")
-    print("  5. Start applying with confidence! 🚀")
-    print("\n" + "="*80 + "\n")
+    print(f"\n✅ Done — report saved to: {report_path}")
+    if verbose:
+        print(f"📂 All outputs for this run saved in: {run_dir}")
+        print("\n🎉 Next Steps:")
+        print("  1. Review the full report for comprehensive job search guidance")
+        print("  2. Check individual agent outputs in the same run folder")
+        print("  3. Customize the search parameters in main.py to find more jobs")
+        print("  4. Use the insights to update your resume and LinkedIn profile")
+        print("  5. Start applying with confidence! 🚀")
 
 
 # =============================================================================
@@ -159,18 +205,27 @@ def main():
     5. Save and display results
     """
 
+    args = parse_args()
+    verbose = args.verbose
+
+    # By default, silence CrewAI's own panels (agent/task/tool status boxes)
+    # and its tracing notice - our own one-line-per-task progress is enough.
+    # --verbose restores the full detail for debugging/learning.
+    set_suppress_console_output(not verbose)
+    set_suppress_tracing_messages(True)
+
     # -------------------------------------------------------------------------
     # Step 1: Print banner and configuration
     # -------------------------------------------------------------------------
 
-    print_banner()
-    print_config()
+    print_banner(verbose)
+    if verbose:
+        print_config()
 
     # -------------------------------------------------------------------------
     # Step 2: Validate configuration
     # -------------------------------------------------------------------------
 
-    print("🔍 Validating configuration...")
     is_valid, errors = validate_config()
 
     if not is_valid:
@@ -181,65 +236,52 @@ def main():
         print("\nSee SETUP.md for detailed setup instructions.")
         sys.exit(1)
 
-    print("✅ Configuration valid!\n")
-
     # -------------------------------------------------------------------------
-    # Step 3: Display search parameters
+    # Step 3: Display search parameters and create this run's output folder
     # -------------------------------------------------------------------------
 
-    print_search_params(JOB_ROLE, LOCATION, NUM_RESULTS)
+    print(f"🎯 {JOB_ROLE} | {LOCATION} | {NUM_RESULTS} results\n")
+    if verbose:
+        print_search_params(JOB_ROLE, LOCATION, NUM_RESULTS)
+
+    run_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    run_dir = create_run_output_dir(JOB_ROLE, run_timestamp)
+    if verbose:
+        print(f"📂 Saving this run's outputs to: {run_dir}\n")
 
     # -------------------------------------------------------------------------
     # Step 4: Create agents
     # -------------------------------------------------------------------------
 
-    print("🤖 Creating AI agents...")
-    print("  • Job Search Specialist")
-    print("  • Skills Development Advisor")
-    print("  • Interview Preparation Coach")
-    print("  • Career Strategy Advisor")
-
-    agents_dict = create_all_agents()
-    print("✅ All agents created!\n")
+    agents_dict = create_all_agents(verbose=verbose)
 
     # -------------------------------------------------------------------------
     # Step 5: Create tasks
     # -------------------------------------------------------------------------
 
-    print("📋 Creating tasks...")
     tasks = create_all_tasks(
         agents=agents_dict,
         role=JOB_ROLE,
         location=LOCATION,
-        num_results=NUM_RESULTS
+        num_results=NUM_RESULTS,
+        output_dir=run_dir,
+        verbose=verbose
     )
-    print(f"✅ Created {len(tasks)} tasks!\n")
 
     # -------------------------------------------------------------------------
     # Step 6: Create crew
     # -------------------------------------------------------------------------
 
-    print("👥 Assembling crew...")
-
     crew = Crew(
         agents=list(agents_dict.values()),
         tasks=tasks,
         process=Process.sequential,  # Tasks run one after another
-        verbose=True,  # Show detailed output (great for learning!)
+        verbose=verbose,
     )
-
-    print("✅ Crew assembled!\n")
 
     # -------------------------------------------------------------------------
     # Step 7: Run the crew!
     # -------------------------------------------------------------------------
-
-    print("="*80)
-    print("🚀 STARTING JOB SEARCH ANALYSIS")
-    print("="*80)
-    print("\nThis may take 3-5 minutes depending on API response times.")
-    print("You'll see detailed output from each agent as they work.\n")
-    print("="*80 + "\n")
 
     try:
         # This is where the magic happens!
@@ -249,7 +291,7 @@ def main():
 
     except KeyboardInterrupt:
         print("\n\n⚠️  Job search interrupted by user.")
-        print("Partial results may be available in the outputs/ folder.")
+        print(f"Partial results may be available in: {run_dir}")
         sys.exit(0)
 
     except Exception as e:
@@ -265,15 +307,13 @@ def main():
     # Step 8: Save final report
     # -------------------------------------------------------------------------
 
-    print("\n💾 Saving final report...")
-    report_path = save_final_report(crew_output, JOB_ROLE, LOCATION)
-    print(f"✅ Report saved to: {report_path.name}")
+    report_path = save_final_report(crew_output, JOB_ROLE, LOCATION, run_dir)
 
     # -------------------------------------------------------------------------
     # Step 9: Print completion message
     # -------------------------------------------------------------------------
 
-    print_completion_message(report_path)
+    print_completion_message(report_path, run_dir, verbose)
 
 
 # =============================================================================

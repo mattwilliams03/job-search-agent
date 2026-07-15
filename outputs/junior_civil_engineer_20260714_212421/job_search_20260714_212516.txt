@@ -1,0 +1,103 @@
+Task: job_search
+Timestamp: 20260714_212516
+================================================================================
+
+# Junior Civil Engineer Job Search Report — New York
+
+## 1. Search Summary
+
+- **Primary Search:** "Junior Civil Engineer" in New York → **4 total matches found** (limited pool for this exact entry-level title)
+- **Supplementary Search:** "Civil Engineer" in New York → 695 total matches, used to identify additional entry-level/early-career-friendly roles suitable for junior candidates
+- **Final Curated Selection:** 5 highly relevant listings combining both searches, prioritizing entry-level and early-career opportunities with detailed descriptions
+- **Overall Market Observation:** The New York civil engineering market is active, with strong demand across transit, infrastructure, land development, and data center sectors. True "junior" titled postings are scarce, but many companies (especially Actalent, a staffing firm) explicitly welcome recent graduates and early-career engineers under general "Civil Engineer" titles. Salaries for junior/entry roles range roughly $57K–$100K, while senior/PE-track roles climb to $140K–$186K.
+
+---
+
+## 2. Detailed Job Listings
+
+### Job 1: Jr. Civil/Structural Engineer
+- **Company:** Systra
+- **Location:** New York City, NY
+- **Salary:** ~$99,837
+- **Posted:** Sept 2024
+- **Key Skills/Requirements:** Civil/structural engineering fundamentals, rail/transit infrastructure exposure
+- **Description Highlights:** SYSTRA is a global leader in rail mass transit with 60+ years of experience across 150+ countries; NY headquarters offers strong career development pathways for junior engineers entering the transit infrastructure space.
+- **Apply URL:** https://www.adzuna.com/details/4852168919?utm_medium=api&utm_source=08ef708c
+
+---
+
+### Job 2: Civil Engineer (Entry-Level to Early Career)
+- **Company:** Actalent
+- **Location:** Brooklyn, New York City, NY
+- **Salary:** ~$57,069
+- **Posted:** July 2026
+- **Key Skills/Requirements:** Recent Civil Engineering degree, willingness to learn hands-on design, interest in infrastructure/land development
+- **Description Highlights:** Explicitly targets recent graduates and early-career engineers; hands-on mentorship working alongside experienced engineers on infrastructure and land development projects. One of the clearest entry-level postings found.
+- **Apply URL:** https://www.adzuna.com/land/ad/5799881440?se=YPos9ut_8RG_M5bJ2o6avw&utm_medium=api&utm_source=08ef708c&v=FF9DBC9F2E0797F8ABD300A213D692EB878EE654
+
+---
+
+### Job 3: Civil Engineer (Roadway/Highway Design)
+- **Company:** Actalent
+- **Location:** New York City, NY
+- **Salary:** ~$79,428
+- **Posted:** July 2026
+- **Key Skills/Requirements:** Roadway/highway design, grading, drainage, utilities, green infrastructure, work zone traffic control, industry-standard civil design software (e.g., AutoCAD Civil 3D)
+- **Description Highlights:** Focus on transportation infrastructure design; involves preparing technical documentation and collaborating with multi-disciplinary teams — good fit for junior engineers building technical design skills.
+- **Apply URL:** https://www.adzuna.com/land/ad/5794192732?se=YPos9ut_8RG_M5bJ2o6avw&utm_medium=api&utm_source=08ef708c&v=1867BD1B980876256913BAFA5E9DE96809B8B812
+
+---
+
+### Job 4: Civil Engineer (Roadway/Highway Design — Manhattan)
+- **Company:** Actalent
+- **Location:** Grand Central, Manhattan, NY
+- **Salary:** ~$102,877
+- **Posted:** July 2026
+- **Key Skills/Requirements:** Same core skill set as Job 3 — civil/highway design software proficiency, drainage/utility design, contract documentation
+- **Description Highlights:** Near-identical role to Job 3 but based in Manhattan with a notably higher salary band, suggesting slightly more seniority/location premium; useful for comparing early-to-mid career compensation.
+- **Apply URL:** https://www.adzuna.com/land/ad/5794974058?se=YPos9ut_8RG_M5bJ2o6avw&utm_medium=api&utm_source=08ef708c&v=EB0F8D6BC5938C5494702E1CB099A5549E48A6B5
+
+---
+
+### Job 5: Civil Engineer PE
+- **Company:** Actalent
+- **Location:** Tyler Park, Hudson County, NJ (Greater NY area)
+- **Salary:** ~$99,461
+- **Posted:** July 2026
+- **Key Skills/Requirements:** PE license required, land development project management, municipal approvals, mentoring junior engineers
+- **Description Highlights:** More senior-track role but highly informative for junior engineers as a career-progression benchmark — outlines the path from junior engineer to PE-led team management, including client development and municipal board representation.
+- **Apply URL:** https://www.adzuna.com/land/ad/5784846137?se=YPos9ut_8RG_M5bJ2o6avw&utm_medium=api&utm_source=08ef708c&v=7F067F6D2CECFCF90016E91A0686971BDEFD15FA
+
+---
+
+## 3. Market Insights
+
+### Common Skills Across Listings
+- **Technical design software:** Civil/highway design tools (e.g., AutoCAD Civil 3D or equivalent) appear repeatedly
+- **Core civil engineering fundamentals:** Grading, drainage, utilities, site layout
+- **Infrastructure focus:** Strong emphasis on transportation/roadway, land development, and transit projects in the NYC market
+- **Soft skills:** Collaboration with multi-disciplinary teams, technical documentation, client/municipal interaction (at senior levels)
+- **Licensure trajectory:** PE license is a clear differentiator between junior/entry roles and senior/leadership roles
+
+### Experience Level Patterns
+- **True entry-level postings are rare** under the "Junior" title specifically, but staffing firms like Actalent actively recruit "Entry-Level to Early Career" engineers under broader "Civil Engineer" titles
+- **Clear career ladder visible:** Entry-level (0-2 yrs) → Mid-level design engineer (2-5 yrs) → PE-licensed team lead (5+ yrs)
+- Junior engineers are frequently expected to work under mentorship of PE-licensed seniors, especially in land development and bridge/structural work
+
+### Salary Trends
+- **Entry-level/Junior:** $57,000 – $100,000
+- **Mid-level (highway/roadway design):** $79,000 – $103,000 (location within NYC boroughs affects range — Manhattan roles trend higher)
+- **Senior/PE-licensed:** $99,000 – $140,000+
+- **Specialized senior (AI Data Centers, SME roles):** Up to $186,000 — indicates high-growth niche sectors command premium pay even relative to standard civil roles
+
+### Notable Companies Hiring
+- **Actalent** — Staffing/recruiting firm with the highest volume of active civil engineering postings across all experience levels in NY; strong entry-level pipeline
+- **Systra** — Global rail transit leader headquartered in NYC, offering junior structural/civil roles with strong growth potential
+- **Parsons Corporation** — Major infrastructure firm hiring at the Associate Engineer level with construction management exposure
+- **Jacobs** — Large engineering firm expanding rapidly into AI data center infrastructure, indicating emerging niche opportunities beyond traditional civil engineering
+- **RightWorks** — Specialized recruiting for structural/load rating engineering (bridge-focused), relevant for candidates interested in structural specialization
+
+### Key Takeaway for Candidates
+Junior civil engineers targeting NYC should focus applications through staffing/recruiting firms like Actalent, which explicitly market entry-level roles, while also monitoring large infrastructure firms (Systra, Parsons, Jacobs) for structured graduate programs. Building proficiency in civil design software and gaining exposure to roadway/highway or transit infrastructure projects will be critical for competitiveness, with PE licensure being the key long-term milestone for salary growth.
+
+================================================================================

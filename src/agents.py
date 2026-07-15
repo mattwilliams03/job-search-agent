@@ -24,7 +24,6 @@ from crewai import Agent, LLM
 
 from src.config import (
     CLAUDE_MODEL,
-    AGENT_VERBOSE,
     AGENT_ALLOW_DELEGATION,
     AGENT_MEMORY,
 )
@@ -37,9 +36,9 @@ from src.tools import search_jobs
 
 # Initialize the Claude LLM that powers all our agents
 # Using CrewAI's LLM wrapper for simplified configuration
+# Note: `temperature` is omitted since current Claude models reject it.
 llm = LLM(
     model=CLAUDE_MODEL,
-    temperature=0.7,  # Balanced creativity and consistency
 )
 
 
@@ -47,7 +46,7 @@ llm = LLM(
 # AGENT 1: JOB SEARCHER
 # =============================================================================
 
-def create_job_searcher_agent() -> Agent:
+def create_job_searcher_agent(verbose: bool = False) -> Agent:
     """
     Create the Job Searcher agent.
 
@@ -111,7 +110,7 @@ def create_job_searcher_agent() -> Agent:
         tools=[search_jobs],
 
         # CONFIGURATION
-        verbose=AGENT_VERBOSE,  # Show thinking process (great for learning!)
+        verbose=verbose,  # Show thinking process (great for learning!)
         allow_delegation=AGENT_ALLOW_DELEGATION,  # Can ask other agents for help
         memory=AGENT_MEMORY,  # Remember context from previous interactions
         llm=llm,  # Use Claude as the brain
@@ -122,7 +121,7 @@ def create_job_searcher_agent() -> Agent:
 # AGENT 2: SKILLS ADVISOR
 # =============================================================================
 
-def create_skills_advisor_agent() -> Agent:
+def create_skills_advisor_agent(verbose: bool = False) -> Agent:
     """
     Create the Skills Development Advisor agent.
 
@@ -185,7 +184,7 @@ def create_skills_advisor_agent() -> Agent:
         tools=[],
 
         # Configuration
-        verbose=AGENT_VERBOSE,
+        verbose=verbose,
         allow_delegation=AGENT_ALLOW_DELEGATION,
         memory=AGENT_MEMORY,
         llm=llm,
@@ -196,7 +195,7 @@ def create_skills_advisor_agent() -> Agent:
 # AGENT 3: INTERVIEW COACH
 # =============================================================================
 
-def create_interview_coach_agent() -> Agent:
+def create_interview_coach_agent(verbose: bool = False) -> Agent:
     """
     Create the Interview Preparation Coach agent.
 
@@ -271,7 +270,7 @@ def create_interview_coach_agent() -> Agent:
         tools=[],
 
         # Configuration
-        verbose=AGENT_VERBOSE,
+        verbose=verbose,
         allow_delegation=AGENT_ALLOW_DELEGATION,
         memory=AGENT_MEMORY,
         llm=llm,
@@ -282,7 +281,7 @@ def create_interview_coach_agent() -> Agent:
 # AGENT 4: CAREER ADVISOR
 # =============================================================================
 
-def create_career_advisor_agent() -> Agent:
+def create_career_advisor_agent(verbose: bool = False) -> Agent:
     """
     Create the Career Advisor agent.
 
@@ -368,7 +367,7 @@ def create_career_advisor_agent() -> Agent:
         tools=[],
 
         # Configuration
-        verbose=AGENT_VERBOSE,
+        verbose=verbose,
         allow_delegation=AGENT_ALLOW_DELEGATION,
         memory=AGENT_MEMORY,
         llm=llm,
@@ -379,7 +378,7 @@ def create_career_advisor_agent() -> Agent:
 # AGENT FACTORY FUNCTION
 # =============================================================================
 
-def create_all_agents() -> dict[str, Agent]:
+def create_all_agents(verbose: bool = False) -> dict[str, Agent]:
     """
     Create all agents for the job search system.
 
@@ -388,15 +387,18 @@ def create_all_agents() -> dict[str, Agent]:
 
     Following best practice: Centralized agent creation for consistency.
 
+    Args:
+        verbose: If True, agents print their detailed reasoning and tool calls
+
     Returns:
         Dictionary mapping agent names to Agent instances
     """
 
     return {
-        'job_searcher': create_job_searcher_agent(),
-        'skills_advisor': create_skills_advisor_agent(),
-        'interview_coach': create_interview_coach_agent(),
-        'career_advisor': create_career_advisor_agent(),
+        'job_searcher': create_job_searcher_agent(verbose=verbose),
+        'skills_advisor': create_skills_advisor_agent(verbose=verbose),
+        'interview_coach': create_interview_coach_agent(verbose=verbose),
+        'career_advisor': create_career_advisor_agent(verbose=verbose),
     }
 
 

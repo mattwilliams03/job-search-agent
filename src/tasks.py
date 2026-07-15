@@ -26,19 +26,27 @@ from pathlib import Path
 from crewai import Task
 from crewai.tasks.task_output import TaskOutput
 
-from src.config import OUTPUT_DIR
-
 
 # =============================================================================
 # HELPER FUNCTIONS
 # =============================================================================
+
+# Human-readable names for the short task-name slugs, used in filenames,
+# markdown headers, and terminal progress output.
+TASK_DISPLAY_NAMES = {
+    "job_search": "Job Search",
+    "skills_analysis": "Skills Analysis",
+    "interview_prep": "Interview Prep",
+    "career_advisory": "Career Advisory",
+}
+
 
 def get_timestamp() -> str:
     """Get current timestamp in a readable format."""
     return datetime.now().strftime("%Y%m%d_%H%M%S")
 
 
-def create_task_callback(task_name: str):
+def create_task_callback(task_name: str, output_dir: Path, verbose: bool = False):
     """
     Create a callback function for saving task output.
 
@@ -47,24 +55,30 @@ def create_task_callback(task_name: str):
 
     Args:
         task_name: Name of the task (used in filename)
+        output_dir: Directory to save the task output in (this run's folder)
+        verbose: If True, also print the saved file path (quiet by default)
 
     Returns:
         Callback function that saves task output to file
     """
+    display_name = TASK_DISPLAY_NAMES.get(task_name, task_name)
+
     def callback(output: TaskOutput) -> None:
-        """Save task output to a file."""
+        """Save task output to a Markdown file."""
         timestamp = get_timestamp()
-        filename = f"{task_name}_{timestamp}.txt"
-        filepath = OUTPUT_DIR / filename
+        filename = f"{task_name}_{timestamp}.md"
+        filepath = output_dir / filename
 
         with open(filepath, "w", encoding="utf-8") as f:
-            f.write(f"Task: {task_name}\n")
-            f.write(f"Timestamp: {timestamp}\n")
-            f.write("=" * 80 + "\n\n")
+            f.write(f"# {display_name}\n\n")
+            f.write(f"**Completed:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+            f.write("---\n\n")
             f.write(output.raw)
-            f.write("\n\n" + "=" * 80 + "\n")
+            f.write("\n")
 
-        print(f"💾 Saved {task_name} output to: {filepath.name}")
+        print(f"✅ {display_name}")
+        if verbose:
+            print(f"   💾 Saved to: {filepath.name}")
 
     return callback
 
@@ -73,7 +87,7 @@ def create_task_callback(task_name: str):
 # TASK 1: JOB SEARCH
 # =============================================================================
 
-def create_job_search_task(agent, role: str, location: str, num_results: int) -> Task:
+def create_job_search_task(agent, role: str, location: str, num_results: int, output_dir: Path, verbose: bool = False) -> Task:
     """
     Create the job search task.
 
@@ -155,7 +169,7 @@ Format the output clearly with sections and bullet points for easy reading.
         description=description,
         expected_output=expected_output,
         agent=agent,
-        callback=create_task_callback("job_search"),
+        callback=create_task_callback("job_search", output_dir, verbose),
     )
 
 
@@ -163,7 +177,7 @@ Format the output clearly with sections and bullet points for easy reading.
 # TASK 2: SKILLS ANALYSIS
 # =============================================================================
 
-def create_skills_analysis_task(agent, job_search_task: Task, role: str) -> Task:
+def create_skills_analysis_task(agent, job_search_task: Task, role: str, output_dir: Path, verbose: bool = False) -> Task:
     """
     Create the skills analysis task.
 
@@ -275,7 +289,7 @@ Format with clear sections, bullet points, and actionable advice.
         expected_output=expected_output,
         agent=agent,
         context=[job_search_task],  # This task builds on job search results
-        callback=create_task_callback("skills_analysis"),
+        callback=create_task_callback("skills_analysis", output_dir, verbose),
     )
 
 
@@ -283,7 +297,7 @@ Format with clear sections, bullet points, and actionable advice.
 # TASK 3: INTERVIEW PREPARATION
 # =============================================================================
 
-def create_interview_prep_task(agent, job_search_task: Task, role: str) -> Task:
+def create_interview_prep_task(agent, job_search_task: Task, role: str, output_dir: Path, verbose: bool = False) -> Task:
     """
     Create the interview preparation task.
 
@@ -421,7 +435,7 @@ Format with clear sections and actionable guidance for each question.
         expected_output=expected_output,
         agent=agent,
         context=[job_search_task],
-        callback=create_task_callback("interview_prep"),
+        callback=create_task_callback("interview_prep", output_dir, verbose),
     )
 
 
@@ -429,7 +443,7 @@ Format with clear sections and actionable guidance for each question.
 # TASK 4: CAREER ADVISORY
 # =============================================================================
 
-def create_career_advisory_task(agent, job_search_task: Task, role: str) -> Task:
+def create_career_advisory_task(agent, job_search_task: Task, role: str, output_dir: Path, verbose: bool = False) -> Task:
     """
     Create the career advisory task.
 
@@ -602,7 +616,7 @@ Format with clear sections, specific examples, and actionable checklists.
         expected_output=expected_output,
         agent=agent,
         context=[job_search_task],
-        callback=create_task_callback("career_advisory"),
+        callback=create_task_callback("career_advisory", output_dir, verbose),
     )
 
 
@@ -614,7 +628,9 @@ def create_all_tasks(
     agents: dict,
     role: str,
     location: str,
-    num_results: int
+    num_results: int,
+    output_dir: Path,
+    verbose: bool = False
 ) -> list[Task]:
     """
     Create all tasks for the job search system in the correct order.
@@ -630,6 +646,8 @@ def create_all_tasks(
         role: Job role to search for
         location: Location to search in
         num_results: Number of job results to retrieve
+        output_dir: Directory to save this run's task outputs in
+        verbose: If True, task callbacks also print the saved file path
 
     Returns:
         List of Task instances in execution order
@@ -640,26 +658,34 @@ def create_all_tasks(
         agent=agents['job_searcher'],
         role=role,
         location=location,
-        num_results=num_results
+        num_results=num_results,
+        output_dir=output_dir,
+        verbose=verbose
     )
 
     # Create dependent tasks (they all depend on job search)
     skills_task = create_skills_analysis_task(
         agent=agents['skills_advisor'],
         job_search_task=job_search_task,
-        role=role
+        role=role,
+        output_dir=output_dir,
+        verbose=verbose
     )
 
     interview_task = create_interview_prep_task(
         agent=agents['interview_coach'],
         job_search_task=job_search_task,
-        role=role
+        role=role,
+        output_dir=output_dir,
+        verbose=verbose
     )
 
     career_task = create_career_advisory_task(
         agent=agents['career_advisor'],
         job_search_task=job_search_task,
-        role=role
+        role=role,
+        output_dir=output_dir,
+        verbose=verbose
     )
 
     # Return in execution order

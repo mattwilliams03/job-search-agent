@@ -22,7 +22,7 @@ load_dotenv()
 
 # Anthropic Claude API Configuration
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
-CLAUDE_MODEL = "anthropic/claude-3-5-sonnet-20241022"
+CLAUDE_MODEL = "anthropic/claude-sonnet-5"
 
 # Adzuna Job Search API Configuration
 ADZUNA_APP_ID = os.getenv("ADZUNA_APP_ID")
@@ -44,15 +44,17 @@ DEFAULT_NUM_RESULTS = 5  # Number of job listings to retrieve
 # AGENT CONFIGURATION
 # =============================================================================
 
-# Agent verbosity - Set to True to see detailed agent thinking process
-# This is helpful for learning and debugging!
-AGENT_VERBOSE = True
+# Agent verbosity is controlled at runtime via the --verbose CLI flag
+# (see main.py), not here, so quiet/detailed output can be chosen per run.
 
 # Agent delegation - Allow agents to delegate tasks to each other
 AGENT_ALLOW_DELEGATION = False  # Disabled to reduce API calls and avoid rate limits
 
 # Memory settings - Agents can remember context from previous interactions
-AGENT_MEMORY = True
+# Disabled: CrewAI's memory tools require a vector embedder (OpenAI by
+# default), and this project only uses Anthropic/Adzuna keys. Task context
+# is already passed explicitly via each Task's `context` parameter.
+AGENT_MEMORY = False
 
 # =============================================================================
 # OUTPUT CONFIGURATION
@@ -150,7 +152,6 @@ def print_config() -> None:
     print(f"   Number of Results: {DEFAULT_NUM_RESULTS}")
     print(f"\n🤖 Agent Settings:")
     print(f"   Model: {CLAUDE_MODEL}")
-    print(f"   Verbose: {AGENT_VERBOSE}")
     print(f"   Allow Delegation: {AGENT_ALLOW_DELEGATION}")
     print(f"\n🔑 API Keys:")
     print(f"   Anthropic API: {'✓ Set' if ANTHROPIC_API_KEY else '✗ Missing'}")
@@ -180,7 +181,6 @@ __all__ = [
     "DEFAULT_NUM_RESULTS",
 
     # Agent Settings
-    "AGENT_VERBOSE",
     "AGENT_ALLOW_DELEGATION",
     "AGENT_MEMORY",
 

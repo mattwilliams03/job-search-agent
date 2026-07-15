@@ -282,8 +282,6 @@ See the .env.example file for details.
         f"&content-type=application/json"
     )
 
-    print(f"\n🔍 Searching for {num_results} '{role}' jobs in {location}...")
-
     # -------------------------------------------------------------------------
     # Step 4: Make API request with retry logic
     # -------------------------------------------------------------------------
@@ -339,8 +337,6 @@ Job Listings:
 {"=" * 80}
 
 """.join(formatted_jobs)
-
-    print(f"✅ Found {len(results)} job listings!")
 
     return output
 

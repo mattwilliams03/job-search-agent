@@ -13,7 +13,6 @@ Author: Claude Builder Club @ UC Irvine
 Workshop: Intro to AI Agents (October 20, 2025)
 """
 
-import json
 import pytest
 from unittest.mock import patch, MagicMock
 
@@ -132,34 +131,18 @@ def test_format_job_listing_missing_salary():
 # TEST SEARCH JOBS TOOL
 # =============================================================================
 
-def test_search_jobs_invalid_json():
-    """Test that invalid JSON input is handled gracefully."""
-    result = search_jobs("this is not json")
+def test_search_jobs_invalid_num_results():
+    """Test that an out-of-range num_results is caught."""
+    result = search_jobs.func(role="Data Scientist", location="Los Angeles", num_results=0)
     assert "ERROR" in result
-    assert "JSON" in result
-
-
-def test_search_jobs_missing_parameters():
-    """Test that missing parameters are caught."""
-    input_json = json.dumps({
-        "role": "Data Scientist",
-        # missing location and num_results
-    })
-    result = search_jobs(input_json)
-    assert "ERROR" in result
-    assert "location" in result.lower()
+    assert "num_results" in result.lower()
 
 
 @patch('src.tools.ADZUNA_APP_ID', None)
 @patch('src.tools.ADZUNA_API_KEY', None)
 def test_search_jobs_missing_credentials():
     """Test that missing API credentials are detected."""
-    input_json = json.dumps({
-        "role": "Data Scientist",
-        "location": "Los Angeles",
-        "num_results": 5
-    })
-    result = search_jobs(input_json)
+    result = search_jobs.func(role="Data Scientist", location="Los Angeles", num_results=5)
     assert "ERROR" in result
     assert "credentials" in result.lower()
 
@@ -194,13 +177,7 @@ def test_search_jobs_success(mock_api_request):
         ]
     }
 
-    input_json = json.dumps({
-        "role": "Data Scientist",
-        "location": "Los Angeles",
-        "num_results": 2
-    })
-
-    result = search_jobs(input_json)
+    result = search_jobs.func(role="Data Scientist", location="Los Angeles", num_results=2)
 
     # Check success indicators
     assert "ERROR" not in result
@@ -221,13 +198,11 @@ def test_search_jobs_no_results(mock_api_request):
         "results": []
     }
 
-    input_json = json.dumps({
-        "role": "Extremely Rare Job Title",
-        "location": "Middle of Nowhere",
-        "num_results": 5
-    })
-
-    result = search_jobs(input_json)
+    result = search_jobs.func(
+        role="Extremely Rare Job Title",
+        location="Middle of Nowhere",
+        num_results=5
+    )
 
     assert "No job listings found" in result
     assert "Suggestions" in result
@@ -241,13 +216,7 @@ def test_search_jobs_api_failure(mock_api_request):
     # Mock API failure
     mock_api_request.return_value = None
 
-    input_json = json.dumps({
-        "role": "Data Scientist",
-        "location": "Los Angeles",
-        "num_results": 5
-    })
-
-    result = search_jobs(input_json)
+    result = search_jobs.func(role="Data Scientist", location="Los Angeles", num_results=5)
 
     assert "ERROR" in result
     assert "Failed to fetch" in result
@@ -271,13 +240,7 @@ def test_search_jobs_integration():
     2. Change skipif to False above
     3. Run: pytest tests/test_tools.py -m integration
     """
-    input_json = json.dumps({
-        "role": "Data Scientist",
-        "location": "Los Angeles",
-        "num_results": 2
-    })
-
-    result = search_jobs(input_json)
+    result = search_jobs.func(role="Data Scientist", location="Los Angeles", num_results=2)
 
     # Should get real results
     assert "ERROR" not in result
