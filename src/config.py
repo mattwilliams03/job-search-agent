@@ -41,17 +41,53 @@ DEFAULT_NUM_RESULTS = 5  # Number of job listings to retrieve
 # MODEL ASSIGNMENT
 # =============================================================================
 
+# Per-task model constants. Escalating/downgrading any single task is a
+# one-line change here.
+MODEL_EXTRACT = "claude-haiku-4-5-20251001"  # cheap; grounded by quote-verification
+MODEL_MERGE = CLAUDE_MODEL                    # real judgment call
+MODEL_HISTORY_SUMMARY = MODEL_EXTRACT         # cheap; compressing an existing chain
+
 # Per-task model lookup, keyed by the `task` argument passed to
 # src.llm.complete(). All legacy steps share one model for now; later
-# phases add real per-task keys/models here (e.g. MODEL_EXTRACT for
-# cheap extraction tasks, MODEL_COVER_LETTER for higher-effort drafting)
-# without touching src/llm.py itself.
+# phases add real per-task keys/models here without touching
+# src/llm.py itself. New (non-legacy) task keys must not use the
+# `legacy_` prefix - that's reserved for the ported multi-agent-era flow.
 MODEL_FOR_TASK: dict[str, str] = {
     "legacy_job_search": CLAUDE_MODEL,
     "legacy_skills_analysis": CLAUDE_MODEL,
     "legacy_interview_prep": CLAUDE_MODEL,
     "legacy_career_advisory": CLAUDE_MODEL,
+    "extract_facts": MODEL_EXTRACT,
+    "merge_facts": MODEL_MERGE,
+    "summarize_history": MODEL_HISTORY_SUMMARY,
 }
+
+# =============================================================================
+# PROFILE INGESTION
+# =============================================================================
+
+# Valid profile_facts.section values, matching the DB CHECK constraint.
+# Order also drives `profile show`'s display order and `profile seed`'s
+# prompt order.
+PROFILE_SECTIONS = [
+    "summary",
+    "experience",
+    "skills",
+    "achievements",
+    "education",
+    "preferences",
+    "style",
+]
+
+# Below this many characters, a converted document is treated as
+# suspiciously short (e.g. a scanned-image PDF with no text layer) and
+# ingestion is refused rather than silently extracting nothing useful.
+MIN_INGEST_TEXT_LENGTH = 100
+
+# Human-editable export of the active profile (Phase 2). Not created at
+# import time like OUTPUT_DIR - only export_profile() creates the
+# `profile/` directory, lazily, since most commands never touch it.
+PROFILE_MD_PATH = Path(__file__).parent.parent / "profile" / "profile.md"
 
 # =============================================================================
 # OUTPUT CONFIGURATION
@@ -168,7 +204,15 @@ __all__ = [
     "DEFAULT_NUM_RESULTS",
 
     # Model Settings
+    "MODEL_EXTRACT",
+    "MODEL_MERGE",
+    "MODEL_HISTORY_SUMMARY",
     "MODEL_FOR_TASK",
+
+    # Profile Ingestion Settings
+    "PROFILE_SECTIONS",
+    "MIN_INGEST_TEXT_LENGTH",
+    "PROFILE_MD_PATH",
 
     # Output Settings
     "OUTPUT_DIR",

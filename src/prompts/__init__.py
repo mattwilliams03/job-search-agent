@@ -3,6 +3,9 @@ from src.prompts import (
     legacy_skills_analysis,
     legacy_interview_prep,
     legacy_career_advisory,
+    extraction,
+    merge,
+    history_summary,
 )
 
 __all__ = [
@@ -10,4 +13,7 @@ __all__ = [
     "legacy_skills_analysis",
     "legacy_interview_prep",
     "legacy_career_advisory",
+    "extraction",
+    "merge",
+    "history_summary",
 ]
